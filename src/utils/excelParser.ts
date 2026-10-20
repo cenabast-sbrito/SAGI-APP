@@ -45,6 +45,18 @@ function formatearFechaHora(val: any): string {
 }
 
 /**
+ * Normaliza una cadena eliminando acentos, caracteres especiales y espacios múltiples
+ */
+function normalizarTexto(val: string): string {
+    return val
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/[_\s]+/g, " ")
+        .trim();
+}
+
+/**
  * Lee un archivo (.xlsx, .xls, .csv, .txt) y retorna filas como matrices de strings
  */
 async function leerFilasDeArchivo(archivo: File): Promise<string[][]> {
@@ -60,12 +72,54 @@ async function leerFilasDeArchivo(archivo: File): Promise<string[][]> {
 }
 
 /**
+ * Extrae filas dinámicamente comprobando que la fila de cabecera cumpla con columnas mínimas requeridas.
+ */
+export async function extraerFilasPorCabecera(
+    archivo: File,
+    columnasRequeridas: string[]
+): Promise<Record<string, any>[]> {
+    const filas = await leerFilasDeArchivo(archivo);
+    const requeridasNorm = columnasRequeridas.map(normalizarTexto);
+
+    // Encontrar el índice de la fila cabecera que contenga todas las columnas requeridas
+    const indiceCabecera = filas.findIndex((fila) => {
+        const filaNorm = fila.map(normalizarTexto);
+        return requeridasNorm.every((req) => filaNorm.some((col) => col.includes(req)));
+    });
+
+    if (indiceCabecera === -1) {
+        throw new Error(
+            `El archivo no contiene las cabeceras requeridas: ${columnasRequeridas.join(", ")}`
+        );
+    }
+
+    const cabecerasOriginales = filas[indiceCabecera];
+    const registros: Record<string, any>[] = [];
+
+    for (let i = indiceCabecera + 1; i < filas.length; i++) {
+        const fila = filas[i];
+        if (!fila || fila.every((c) => !c || c.trim() === "")) continue;
+
+        const obj: Record<string, any> = {};
+        cabecerasOriginales.forEach((header, colIdx) => {
+            const clave = header.trim();
+            if (clave) {
+                obj[clave] = fila[colIdx] !== undefined ? fila[colIdx].trim() : "";
+            }
+        });
+
+        registros.push(obj);
+    }
+
+    return registros;
+}
+
+/**
  * Procesa la planilla de Solicitudes de Audiencia (SAGI_TMP_Solicitudes)
  */
 export async function parsearExcelSolicitudes(archivo: File): Promise<SolicitudCargaItem[]> {
     const filas = await leerFilasDeArchivo(archivo);
 
-    // Buscar la fila de cabecera que contenga "Folio" y "Sujeto Pasivo"
     const indiceCabecera = filas.findIndex(fila => {
         const filaStr = fila.map(c => c.toLowerCase()).join(" ");
         return filaStr.includes("folio") && filaStr.includes("sujeto pasivo");
@@ -89,7 +143,7 @@ export async function parsearExcelSolicitudes(archivo: File): Promise<SolicitudC
     const colRut = getIdx("rut");
     const colRepresentado = getIdx("representado");
     const colMateria = getIdx("materia");
-    const colEspecMateria = getIdx("especificación materia");
+    const colEspecMateria = getIdx("especificación materia") !== -1 ? getIdx("especificación materia") : getIdx("especificacion materia");
     const colEstado = getIdx("estado");
 
     const registros: SolicitudCargaItem[] = [];
@@ -128,7 +182,6 @@ export async function parsearExcelSolicitudes(archivo: File): Promise<SolicitudC
 export async function parsearExcelPendientes(archivo: File): Promise<AudienciaPendienteItem[]> {
     const filas = await leerFilasDeArchivo(archivo);
 
-    // Buscar cabecera que contenga "Folio" y ("Sujeto Pasivo" o "Materia")
     const indiceCabecera = filas.findIndex(fila => {
         const filaStr = fila.map(c => c.toLowerCase()).join(" ");
         return filaStr.includes("folio") && (filaStr.includes("sujeto") || filaStr.includes("materia"));
@@ -145,16 +198,16 @@ export async function parsearExcelPendientes(archivo: File): Promise<AudienciaPe
     const colEstado = getIdx("estado");
     const colForma = getIdx("forma");
     const colMateria = getIdx("materia");
-    const colEspecMateria = getIdx("especificación");
+    const colEspecMateria = getIdx("especificación") !== -1 ? getIdx("especificación") : getIdx("especificacion");
     const colLugar = getIdx("lugar");
     const colComuna = getIdx("comuna");
     const colSujetoPasivo = getIdx("sujeto_pasivo") !== -1 ? getIdx("sujeto_pasivo") : getIdx("sujeto pasivo");
     const colCargo = getIdx("cargo");
     const colSujetoActivo = getIdx("sujeto_activo") !== -1 ? getIdx("sujeto_activo") : getIdx("sujeto activo");
     const colRut = getIdx("rut");
-    const colGenero = getIdx("género") !== -1 ? getIdx("género") : getIdx("genero");
+    const colGenero = getIdx("género") !== -1 ? getIdx("género") : (getIdx("genero") !== -1 ? getIdx("genero") : -1);
     const colFechaInicio = getIdx("fecha_inicio") !== -1 ? getIdx("fecha_inicio") : getIdx("fecha inicio");
-    const colFechaTermino = getIdx("fecha_término") !== -1 ? getIdx("fecha_término") : getIdx("fecha termino");
+    const colFechaTermino = getIdx("fecha_término") !== -1 ? getIdx("fecha_término") : (getIdx("fecha termino") !== -1 ? getIdx("fecha termino") : -1);
 
     const registros: AudienciaPendienteItem[] = [];
 

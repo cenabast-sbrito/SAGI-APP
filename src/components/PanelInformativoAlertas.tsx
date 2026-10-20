@@ -109,7 +109,7 @@ export default function PanelInformativoAlertas() {
                     style={{
                         background: "none",
                         border: "1px solid #ced4da",
-                        borderRadius: "6px",
+                        borderRadius: "1px",
                         padding: "4px 10px",
                         fontSize: "12px",
                         cursor: "pointer",

@@ -2,6 +2,7 @@
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Alertas from "./pages/Alertas";
+import AlertasViajes from "./pages/AlertasViajes";
 import CargaGeneral from "./pages/CargaGeneral";
 import FuncionariosCorreo from "./pages/FuncionariosCorreo";
 import Sidebar from "./components/Sidebar";
@@ -28,23 +29,19 @@ export default function App() {
         setToken(null);
     };
 
-    // Si no hay token autenticado, muestra la pantalla de Login
     if (!token) {
         return <Login onLoginSuccess={handleLoginSuccess} />;
     }
 
     return (
         <div style={{ display: "flex", minHeight: "100vh", backgroundColor: "#f4f6f9", fontFamily: "Segoe UI, sans-serif" }}>
-            {/* Menú lateral moderno */}
             <Sidebar
                 tabActual={tabActual}
                 onSelectTab={setTabActual}
                 onCerrarSesion={handleCerrarSesion}
             />
 
-            {/* Contenedor del contenido principal */}
             <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, overflowY: "auto" }}>
-                {/* Barra superior institucional compacta */}
                 <header
                     style={{
                         backgroundColor: "#ffffff",
@@ -64,6 +61,7 @@ export default function App() {
                 <main style={{ flex: 1 }}>
                     {tabActual === "dashboard" && <Dashboard />}
                     {tabActual === "alertas" && <Alertas />}
+                    {tabActual === "alertas-viajes" && <AlertasViajes />}
                     {tabActual === "funcionarios" && <FuncionariosCorreo />}
                     {tabActual === "carga-general" && <CargaGeneral />}
                 </main>

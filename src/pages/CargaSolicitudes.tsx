@@ -158,9 +158,9 @@ export default function CargaSolicitudes() {
                             value={usuarioCarga}
                             onChange={(e) => setUsuarioCarga(e.target.value)}
                             style={{
-                                height: "36px",
+                                height: "30px",
                                 padding: "6px 12px",
-                                borderRadius: "6px",
+                                borderRadius: "1px",
                                 border: "1px solid #ced4da",
                                 fontSize: "14px",
                                 width: "180px"
@@ -184,12 +184,12 @@ export default function CargaSolicitudes() {
                         onClick={handleCargarSimulacion}
                         type="button"
                         style={{
-                            height: "36px",
+                            height: "30px",
                             padding: "0 16px",
                             backgroundColor: "#f8f9fa",
                             color: "#495057",
                             border: "1px solid #ced4da",
-                            borderRadius: "6px",
+                            borderRadius: "1px",
                             cursor: "pointer",
                             fontWeight: 500
                         }}
@@ -202,12 +202,12 @@ export default function CargaSolicitudes() {
                         disabled={cargando || datos.length === 0}
                         type="button"
                         style={{
-                            height: "36px",
+                            height: "30px",
                             padding: "0 20px",
                             backgroundColor: cargando || datos.length === 0 ? "#6c757d" : "#0d6efd",
                             color: "#fff",
                             border: "none",
-                            borderRadius: "6px",
+                            borderRadius: "1px",
                             cursor: cargando || datos.length === 0 ? "not-allowed" : "pointer",
                             fontWeight: 600
                         }}
@@ -224,27 +224,31 @@ export default function CargaSolicitudes() {
             </div>
 
             {error && (
-                <div style={{
-                    padding: "12px 16px",
-                    backgroundColor: "#ffebee",
-                    color: "#c62828",
-                    borderRadius: "6px",
-                    border: "1px solid #ffcdd2",
-                    marginBottom: "20px"
-                }}>
+                <div
+                    style={{
+                        padding: "12px 16px",
+                        backgroundColor: "#ffebee",
+                        color: "#c62828",
+                        borderRadius: "1px",
+                        border: "1px solid #ffcdd2",
+                        marginBottom: "20px"
+                    }}
+                >
                     <strong>Error del servidor:</strong> {error}
                 </div>
             )}
 
             {resultado && (
-                <div style={{
-                    padding: "16px 20px",
-                    backgroundColor: "#e8f5e9",
-                    color: "#2e7d32",
-                    borderRadius: "8px",
-                    border: "1px solid #c8e6c9",
-                    marginBottom: "24px"
-                }}>
+                <div
+                    style={{
+                        padding: "16px 20px",
+                        backgroundColor: "#e8f5e9",
+                        color: "#2e7d32",
+                        borderRadius: "8px",
+                        border: "1px solid #c8e6c9",
+                        marginBottom: "24px"
+                    }}
+                >
                     <h4 style={{ margin: "0 0 8px 0" }}>Resultado de la Carga</h4>
                     <p style={{ margin: "0 0 4px 0", fontSize: "14px" }}>
                         {resultado.mensaje || "Carga de solicitudes procesada exitosamente."}
@@ -293,14 +297,16 @@ export default function CargaSolicitudes() {
                                     <td style={{ padding: "10px" }}>{item.NombreSujetoActivo}</td>
                                     <td style={{ padding: "10px" }}>{item.RutSujetoActivo}</td>
                                     <td style={{ padding: "10px", textAlign: "center", textTransform: "capitalize" }}>
-                                        <span style={{
-                                            padding: "3px 8px",
-                                            borderRadius: "10px",
-                                            backgroundColor: item.Estado === "aceptada" ? "#e8f5e9" : "#ffebee",
-                                            color: item.Estado === "aceptada" ? "#2e7d32" : "#c62828",
-                                            fontWeight: 600,
-                                            fontSize: "11px"
-                                        }}>
+                                        <span
+                                            style={{
+                                                padding: "3px 8px",
+                                                borderRadius: "10px",
+                                                backgroundColor: item.Estado === "aceptada" ? "#e8f5e9" : "#ffebee",
+                                                color: item.Estado === "aceptada" ? "#2e7d32" : "#c62828",
+                                                fontWeight: 600,
+                                                fontSize: "11px"
+                                            }}
+                                        >
                                             {item.Estado}
                                         </span>
                                     </td>

@@ -100,7 +100,7 @@ export default function Dashboard() {
                         onChange={(e) => setRango(e.target.value as RangoDashboard)}
                         style={{
                             padding: "6px 12px",
-                            borderRadius: "6px",
+                            borderRadius: "1px",
                             border: "1px solid #d1d5db",
                             fontSize: "13px",
                             backgroundColor: "#f9fafb",
@@ -121,14 +121,14 @@ export default function Dashboard() {
                                 type="date"
                                 value={fechaDesde}
                                 onChange={(e) => setFechaDesde(e.target.value)}
-                                style={{ padding: "4px 8px", borderRadius: "6px", border: "1px solid #d1d5db", fontSize: "12px" }}
+                                style={{ padding: "4px 8px", borderRadius: "1px", border: "1px solid #d1d5db", fontSize: "12px" }}
                             />
                             <span style={{ fontSize: "12px", color: "#9ca3af" }}>a</span>
                             <input
                                 type="date"
                                 value={fechaHasta}
                                 onChange={(e) => setFechaHasta(e.target.value)}
-                                style={{ padding: "4px 8px", borderRadius: "6px", border: "1px solid #d1d5db", fontSize: "12px" }}
+                                style={{ padding: "4px 8px", borderRadius: "1px", border: "1px solid #d1d5db", fontSize: "12px" }}
                             />
                         </div>
                     )}
@@ -144,7 +144,7 @@ export default function Dashboard() {
                             padding: "6px 10px",
                             backgroundColor: "#f3f4f6",
                             border: "1px solid #d1d5db",
-                            borderRadius: "6px",
+                            borderRadius: "1px",
                             cursor: "pointer",
                             color: "#4b5563"
                         }}
@@ -440,7 +440,7 @@ export default function Dashboard() {
                                         fontSize: "12px",
                                         padding: "4px 10px",
                                         backgroundColor: "#f3f4f6",
-                                        borderRadius: "6px",
+                                        borderRadius: "1px",
                                         color: "#4b5563"
                                     }}
                                 >

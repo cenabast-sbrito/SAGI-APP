@@ -148,7 +148,7 @@ export default function FuncionariosCorreo() {
                                 width: "100%",
                                 height: "38px",
                                 padding: "6px 12px",
-                                borderRadius: "6px",
+                                borderRadius: "1px",
                                 border: "1px solid #d1d5db",
                                 fontSize: "13px",
                                 boxSizing: "border-box"
@@ -169,7 +169,7 @@ export default function FuncionariosCorreo() {
                                 width: "100%",
                                 height: "38px",
                                 padding: "6px 12px",
-                                borderRadius: "6px",
+                                borderRadius: "1px",
                                 border: "1px solid #d1d5db",
                                 fontSize: "13px",
                                 boxSizing: "border-box"
@@ -187,7 +187,7 @@ export default function FuncionariosCorreo() {
                                 backgroundColor: "#f3f4f6",
                                 color: "#4b5563",
                                 border: "1px solid #d1d5db",
-                                borderRadius: "6px",
+                                borderRadius: "1px",
                                 cursor: "pointer",
                                 fontSize: "13px"
                             }}
@@ -274,7 +274,7 @@ export default function FuncionariosCorreo() {
                                                         backgroundColor: "#0d6efd",
                                                         color: "#ffffff",
                                                         border: "none",
-                                                        borderRadius: "6px",
+                                                        borderRadius: "1px",
                                                         cursor: "pointer",
                                                         fontSize: "12px",
                                                         fontWeight: 500,
@@ -345,7 +345,7 @@ export default function FuncionariosCorreo() {
                                 padding: "10px 14px",
                                 backgroundColor: "#fef2f2",
                                 color: "#b91c1c",
-                                borderRadius: "6px",
+                                borderRadius: "1px",
                                 fontSize: "13px",
                                 marginBottom: "16px"
                             }}>
@@ -364,9 +364,9 @@ export default function FuncionariosCorreo() {
                                     value={funcionarioSeleccionado.nombreSujetoPasivo}
                                     style={{
                                         width: "100%",
-                                        height: "36px",
+                                        height: "30px",
                                         padding: "6px 10px",
-                                        borderRadius: "6px",
+                                        borderRadius: "1px",
                                         border: "1px solid #e5e7eb",
                                         backgroundColor: "#f9fafb",
                                         color: "#6b7280",
@@ -390,7 +390,7 @@ export default function FuncionariosCorreo() {
                                         width: "100%",
                                         height: "38px",
                                         padding: "6px 12px",
-                                        borderRadius: "6px",
+                                        borderRadius: "1px",
                                         border: "1px solid #d1d5db",
                                         fontSize: "13px",
                                         boxSizing: "border-box",
@@ -409,7 +409,7 @@ export default function FuncionariosCorreo() {
                                         backgroundColor: "#f3f4f6",
                                         color: "#4b5563",
                                         border: "1px solid #d1d5db",
-                                        borderRadius: "6px",
+                                        borderRadius: "1px",
                                         cursor: guardando ? "not-allowed" : "pointer",
                                         fontSize: "13px",
                                         fontWeight: 500
@@ -425,7 +425,7 @@ export default function FuncionariosCorreo() {
                                         backgroundColor: guardando ? "#9ca3af" : "#0d6efd",
                                         color: "#ffffff",
                                         border: "none",
-                                        borderRadius: "6px",
+                                        borderRadius: "1px",
                                         cursor: guardando ? "not-allowed" : "pointer",
                                         fontSize: "13px",
                                         fontWeight: 600

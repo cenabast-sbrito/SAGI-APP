@@ -1,10 +1,24 @@
 ﻿import { useState, useEffect } from "react";
 import * as XLSX from "xlsx";
-import { cargarSolicitudesApi, cargarAudienciasPendientesApi } from "../api/cargas.api";
-import { parsearExcelSolicitudes, parsearExcelPendientes } from "../utils/excelParser";
+import {
+    cargarSolicitudesApi,
+    cargarAudienciasPendientesApi,
+    cargarViajesLobbyApi,
+    cargarViajesGYDPApi
+} from "../api/cargas.api";
+import {
+    parsearExcelSolicitudes,
+    parsearExcelPendientes,
+    extraerFilasPorCabecera
+} from "../utils/excelParser";
 import type { ResultadoCarga } from "../models/carga";
 
-type TipoPlanilla = "SOLICITUDES" | "PENDIENTES_PUBLICACION" | "DESCONOCIDO";
+type TipoPlanilla =
+    | "SOLICITUDES"
+    | "PENDIENTES_PUBLICACION"
+    | "VIAJES_LOBBY"
+    | "VIAJES_GYDP"
+    | "DESCONOCIDO";
 
 interface RegistroHistorial {
     id: string;
@@ -15,6 +29,28 @@ interface RegistroHistorial {
     estado: "EXITO" | "ERROR";
     mensaje: string;
 }
+
+const CABECERAS_VIAJES_LOBBY = [
+    "Fecha inicio",
+    "Fecha término",
+    "Destino",
+    "Sujeto pasivo"
+];
+
+const CABECERAS_VIAJES_GYDP = [
+    "Rut",
+    "Nombre Funcionario",
+    "Fecha Inicio",
+    "Fecha Término",
+    "Lugar Destino"
+];
+
+const CABECERAS_VIAJES_GYDP_VARIANTE = [
+    "RUT",
+    "NOMBRES",
+    "FECHA_INI",
+    "FECHA_TER"
+];
 
 function obtenerUsuarioLogueado(): string {
     const usuarioStorage = sessionStorage.getItem("usuario");
@@ -46,14 +82,12 @@ export default function CargaGeneral() {
         setUsuarioCarga(obtenerUsuarioLogueado());
     }, []);
 
-    // Detecta automáticamente las cabeceras del archivo
-    const procesarArchivo = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
+    const procesarArchivo = async (file: File) => {
         setArchivoActual(file);
         setCargando(true);
         setMensajeFeedback(null);
+        setDatosParseados([]);
+        setTipoDetectado("DESCONOCIDO");
 
         try {
             const buffer = await file.arrayBuffer();
@@ -61,27 +95,81 @@ export default function CargaGeneral() {
             const hoja = workbook.Sheets[workbook.SheetNames[0]];
             const filas: any[][] = XLSX.utils.sheet_to_json(hoja, { header: 1, defval: "" });
 
-            const textoCabeceras = filas.slice(0, 10).map(f => f.join(" ").toLowerCase()).join(" ");
+            // Busca texto en las primeras 15 filas
+            const textoCabeceras = filas
+                .slice(0, 15)
+                .map((f) => f.join(" ").toLowerCase())
+                .join(" ");
 
-            if (textoCabeceras.includes("fecha respuesta") || textoCabeceras.includes("sujeto pasivo id")) {
+            // 1. Detección: Viajes Lobby
+            if (
+                textoCabeceras.includes("destino") &&
+                textoCabeceras.includes("sujeto pasivo") &&
+                (textoCabeceras.includes("viaje") || textoCabeceras.includes("id sujeto pasivo") || textoCabeceras.includes("objeto"))
+            ) {
+                const data = await extraerFilasPorCabecera(file, CABECERAS_VIAJES_LOBBY);
+                setTipoDetectado("VIAJES_LOBBY");
+                setDatosParseados(data);
+                return;
+            }
+
+            // 2. Detección: Viajes GYDP
+            if (
+                (textoCabeceras.includes("lugar destino") && textoCabeceras.includes("nombre funcionario")) ||
+                (textoCabeceras.includes("fecha_ini") && textoCabeceras.includes("nombres"))
+            ) {
+                let data: Record<string, any>[];
+                try {
+                    data = await extraerFilasPorCabecera(file, CABECERAS_VIAJES_GYDP);
+                } catch {
+                    data = await extraerFilasPorCabecera(file, CABECERAS_VIAJES_GYDP_VARIANTE);
+                }
+                setTipoDetectado("VIAJES_GYDP");
+                setDatosParseados(data);
+                return;
+            }
+
+            // 3. Detección: Solicitudes Lobby
+            if (
+                textoCabeceras.includes("fecha respuesta") ||
+                (textoCabeceras.includes("sujeto pasivo id") && textoCabeceras.includes("folio"))
+            ) {
                 const data = await parsearExcelSolicitudes(file);
                 setTipoDetectado("SOLICITUDES");
                 setDatosParseados(data);
-            } else if (textoCabeceras.includes("fecha inicio") || textoCabeceras.includes("especificación materia tratada") || textoCabeceras.includes("lugar")) {
+                return;
+            }
+
+            // 4. Detección: Audiencias Pendientes
+            if (
+                textoCabeceras.includes("especificación materia tratada") ||
+                textoCabeceras.includes("especificacion materia tratada") ||
+                (textoCabeceras.includes("fecha inicio") && textoCabeceras.includes("lugar") && textoCabeceras.includes("folio"))
+            ) {
                 const data = await parsearExcelPendientes(file);
                 setTipoDetectado("PENDIENTES_PUBLICACION");
                 setDatosParseados(data);
-            } else {
-                setTipoDetectado("DESCONOCIDO");
-                setDatosParseados([]);
-                setMensajeFeedback({ texto: "No se reconoció el formato de la planilla. Verifique columnas requeridas.", error: true });
+                return;
             }
+
+            setTipoDetectado("DESCONOCIDO");
+            setMensajeFeedback({
+                texto: "No se reconoció el formato de la planilla. Verifique que corresponda a Solicitudes, Audiencias o Viajes (Lobby / GYDP).",
+                error: true
+            });
         } catch (err: any) {
-            setMensajeFeedback({ texto: err.message || "Error al leer archivo", error: true });
+            setMensajeFeedback({ texto: err.message || "Error al leer el archivo Excel/CSV.", error: true });
             setDatosParseados([]);
+            setTipoDetectado("DESCONOCIDO");
         } finally {
             setCargando(false);
         }
+    };
+
+    const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        procesarArchivo(file);
     };
 
     const ejecutarCarga = async () => {
@@ -94,15 +182,20 @@ export default function CargaGeneral() {
             let res: ResultadoCarga;
             if (tipoDetectado === "SOLICITUDES") {
                 res = await cargarSolicitudesApi(usuarioCarga, datosParseados);
-            } else {
+            } else if (tipoDetectado === "PENDIENTES_PUBLICACION") {
                 res = await cargarAudienciasPendientesApi(usuarioCarga, datosParseados);
+            } else if (tipoDetectado === "VIAJES_LOBBY") {
+                res = await cargarViajesLobbyApi(usuarioCarga, datosParseados);
+            } else if (tipoDetectado === "VIAJES_GYDP") {
+                res = await cargarViajesGYDPApi(usuarioCarga, datosParseados);
+            } else {
+                throw new Error("Tipo de planilla no reconocido.");
             }
 
             const exitoMsg = res.mensaje || `Carga procesada con éxito (${datosParseados.length} registros).`;
             setMensajeFeedback({ texto: exitoMsg });
 
-            // Agregar al historial de planillas cargadas
-            setHistorialCargas(prev => [
+            setHistorialCargas((prev) => [
                 {
                     id: Math.random().toString(36).substring(2, 9),
                     nombreArchivo: archivoActual.name,
@@ -115,10 +208,14 @@ export default function CargaGeneral() {
                 ...prev
             ]);
         } catch (err: any) {
-            const errorMsg = err.response?.data?.message || err.message || "Error al procesar la carga en el servidor.";
+            const errorMsg =
+                err.response?.data?.message ||
+                err.response?.data?.mensaje ||
+                err.message ||
+                "Error al procesar la carga en el servidor.";
             setMensajeFeedback({ texto: errorMsg, error: true });
 
-            setHistorialCargas(prev => [
+            setHistorialCargas((prev) => [
                 {
                     id: Math.random().toString(36).substring(2, 9),
                     nombreArchivo: archivoActual.name,
@@ -135,41 +232,72 @@ export default function CargaGeneral() {
         }
     };
 
+    const getNombreTipo = (tipo: TipoPlanilla): string => {
+        switch (tipo) {
+            case "SOLICITUDES":
+                return "Solicitudes de Audiencia";
+            case "PENDIENTES_PUBLICACION":
+                return "Audiencias Pendientes de Publicación";
+            case "VIAJES_LOBBY":
+                return "Viajes Ley de Lobby";
+            case "VIAJES_GYDP":
+                return "Viajes GYDP";
+            default:
+                return "Desconocido";
+        }
+    };
+
+    const columnasVistaPrevia = datosParseados.length > 0 ? Object.keys(datosParseados[0]) : [];
+
     return (
-        <div style={{ padding: "24px", maxWidth: "1280px", margin: "0 auto" }}>
-            <h2>Carga General de Planillas (Lobby)</h2>
-            <p style={{ color: "#6c757d" }}>
-                Sube cualquier planilla (Solicitudes o Audiencias Pendientes); el sistema detectará el tipo automáticamente.
+        <div style={{ padding: "24px", maxWidth: "1280px", margin: "0 auto", textAlign: "left" }}>
+            <h2 style={{ margin: "0 0 6px 0", color: "#212529" }}>Carga General de Planillas</h2>
+            <p style={{ margin: "0 0 20px 0", color: "#6c757d", fontSize: "14px" }}>
+                Sube cualquier planilla (Solicitudes, Audiencias Pendientes, Viajes Lobby o Viajes GYDP); el sistema detectará el formato automáticamente por sus cabeceras.
             </p>
 
-            {/* Formulario de carga */}
-            <div style={{ background: "#fff", padding: "20px", borderRadius: "8px", border: "1px solid #EEEEEE;", marginBottom: "20px" }}>
+            {/* Panel de Carga */}
+            <div
+                style={{
+                    background: "#ffffff",
+                    padding: "20px 24px",
+                    borderRadius: "8px",
+                    border: "1px solid #EEEEEE",
+                    marginBottom: "20px",
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.05)"
+                }}
+            >
                 <div style={{ display: "flex", gap: "16px", alignItems: "flex-end", flexWrap: "wrap" }}>
-                    <div hidden>
-                        <label style={{ display: "block", fontSize: "12px", fontWeight: "bold" }}>USUARIO</label>
-                        <input
-                            type="text"
-                            value={usuarioCarga}
-                            onChange={(e) => setUsuarioCarga(e.target.value)}
-                            style={{ height: "36px", padding: "6px 10px" }}
-                        />
-                    </div>
                     <div>
-                        <label style={{ display: "block", fontSize: "12px", fontWeight: "bold" }}>PLANILLA EXCEL / CSV</label>
-                        <input type="file" accept=".xlsx, .xls, .csv" style={{ border: '1px solid', borderColor: 'gray', padding: '7px' }} onChange={procesarArchivo} />
+                        <label style={{ display: "block", fontSize: "12px", fontWeight: "bold", color: "#495057", marginBottom: "4px" }}>
+                            SELECCIONAR ARCHIVO (.xlsx, .xls, .csv)
+                        </label>
+                        <input
+                            type="file"
+                            accept=".xlsx, .xls, .csv"
+                            style={{ border: "1px solid gray", padding: "6px 10px", borderRadius: "2px" }}
+                            onChange={handleFileInput}
+                        />
                     </div>
 
                     <button
                         onClick={ejecutarCarga}
-                        disabled={cargando || !datosParseados.length}
+                        disabled={cargando || !datosParseados.length || tipoDetectado === "DESCONOCIDO"}
                         style={{
                             height: "38px",
                             padding: "0 24px",
-                            backgroundColor: cargando || !datosParseados.length ? "#6c757d" : "#0d6efd",
+                            backgroundColor:
+                                cargando || !datosParseados.length || tipoDetectado === "DESCONOCIDO"
+                                    ? "#6c757d"
+                                    : "#0d6efd",
                             color: "#fff",
                             border: "none",
-                            borderRadius: "6px",
-                            cursor: cargando || !datosParseados.length ? "not-allowed" : "pointer"
+                            borderRadius: "2px",
+                            cursor:
+                                cargando || !datosParseados.length || tipoDetectado === "DESCONOCIDO"
+                                    ? "not-allowed"
+                                    : "pointer",
+                            fontWeight: 600
                         }}
                     >
                         {cargando ? "Procesando Carga..." : `Procesar e Insertar (${datosParseados.length})`}
@@ -177,17 +305,19 @@ export default function CargaGeneral() {
                 </div>
 
                 {archivoActual && tipoDetectado !== "DESCONOCIDO" && (
-                    <div style={{
-                        marginTop: "12px",
-                        fontSize: "14px",
-                        color: "#198754",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "10px",
-                        flexWrap: "wrap"
-                    }}>
+                    <div
+                        style={{
+                            marginTop: "14px",
+                            fontSize: "13px",
+                            color: "#198754",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "10px",
+                            flexWrap: "wrap"
+                        }}
+                    >
                         <span>
-                            ✓ Tipo detectado: <strong>{tipoDetectado === "SOLICITUDES" ? "Solicitudes de Audiencia" : "Audiencias Pendientes de Publicación"}</strong> ({datosParseados.length} registros leídos)
+                            ✓ Formato detectado: <strong>{getNombreTipo(tipoDetectado)}</strong> ({datosParseados.length} registros listos)
                         </span>
                         <button
                             type="button"
@@ -211,47 +341,52 @@ export default function CargaGeneral() {
 
             {/* Mensajes de feedback */}
             {mensajeFeedback && (
-                <div style={{
-                    padding: "12px",
-                    borderRadius: "6px",
-                    marginBottom: "20px",
-                    backgroundColor: mensajeFeedback.error ? "#f8d7da" : "#d1e7dd",
-                    color: mensajeFeedback.error ? "#842029" : "#0f5132"
-                }}>
+                <div
+                    style={{
+                        padding: "12px 16px",
+                        borderRadius: "4px",
+                        marginBottom: "20px",
+                        backgroundColor: mensajeFeedback.error ? "#f8d7da" : "#d1e7dd",
+                        color: mensajeFeedback.error ? "#842029" : "#0f5132",
+                        border: mensajeFeedback.error ? "1px solid #f5c2c7" : "1px solid #badbcc"
+                    }}
+                >
                     {mensajeFeedback.texto}
                 </div>
             )}
 
-            {/* Historial de planillas cargadas en la sesión */}
+            {/* Historial de planillas procesadas */}
             {historialCargas.length > 0 && (
                 <div style={{ marginTop: "24px" }}>
-                    <h3>Planillas Cargadas en esta Sesión</h3>
-                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", background: "#fff" }}>
+                    <h3 style={{ fontSize: "16px", marginBottom: "10px" }}>Planillas Procesadas en esta Sesión</h3>
+                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", background: "#ffffff", border: "1px solid #e9ecef" }}>
                         <thead>
                             <tr style={{ background: "#f8f9fa", borderBottom: "2px solid #dee2e6" }}>
-                                <th style={{ padding: "8px", textAlign: "left" }}>Hora</th>
-                                <th style={{ padding: "8px", textAlign: "left" }}>Archivo</th>
-                                <th style={{ padding: "8px", textAlign: "left" }}>Tipo Detectado</th>
-                                <th style={{ padding: "8px", textAlign: "center" }}>Registros</th>
-                                <th style={{ padding: "8px", textAlign: "center" }}>Resultado</th>
+                                <th style={{ padding: "8px 12px", textAlign: "left" }}>Hora</th>
+                                <th style={{ padding: "8px 12px", textAlign: "left" }}>Archivo</th>
+                                <th style={{ padding: "8px 12px", textAlign: "left" }}>Tipo Detectado</th>
+                                <th style={{ padding: "8px 12px", textAlign: "center" }}>Registros</th>
+                                <th style={{ padding: "8px 12px", textAlign: "center" }}>Resultado</th>
                             </tr>
                         </thead>
                         <tbody>
                             {historialCargas.map((item) => (
                                 <tr key={item.id} style={{ borderBottom: "1px solid #f1f3f5" }}>
-                                    <td style={{ padding: "8px" }}>{item.fechaHora}</td>
-                                    <td style={{ padding: "8px" }}>{item.nombreArchivo}</td>
-                                    <td style={{ padding: "8px" }}>
-                                        {item.tipo === "SOLICITUDES" ? "Solicitudes" : "Audiencias Pendientes"}
-                                    </td>
-                                    <td style={{ padding: "8px", textAlign: "center" }}>{item.totalFilas}</td>
-                                    <td style={{ padding: "8px", textAlign: "center" }}>
-                                        <span style={{
-                                            padding: "3px 8px",
-                                            borderRadius: "4px",
-                                            color: "#fff",
-                                            backgroundColor: item.estado === "EXITO" ? "#198754" : "#dc3545"
-                                        }}>
+                                    <td style={{ padding: "8px 12px" }}>{item.fechaHora}</td>
+                                    <td style={{ padding: "8px 12px" }}>{item.nombreArchivo}</td>
+                                    <td style={{ padding: "8px 12px" }}>{getNombreTipo(item.tipo)}</td>
+                                    <td style={{ padding: "8px 12px", textAlign: "center" }}>{item.totalFilas}</td>
+                                    <td style={{ padding: "8px 12px", textAlign: "center" }}>
+                                        <span
+                                            style={{
+                                                padding: "3px 8px",
+                                                borderRadius: "4px",
+                                                color: "#ffffff",
+                                                fontSize: "11px",
+                                                fontWeight: 600,
+                                                backgroundColor: item.estado === "EXITO" ? "#198754" : "#dc3545"
+                                            }}
+                                        >
                                             {item.estado}
                                         </span>
                                     </td>
@@ -262,7 +397,7 @@ export default function CargaGeneral() {
                 </div>
             )}
 
-            {/* Modal de Vista Previa de la Planilla */}
+            {/* Modal de Vista Previa */}
             {mostrarModalVistaPrevia && (
                 <div
                     style={{
@@ -281,10 +416,10 @@ export default function CargaGeneral() {
                 >
                     <div
                         style={{
-                            backgroundColor: "#fff",
-                            borderRadius: "10px",
-                            width: "90%",
-                            maxWidth: "1150px",
+                            backgroundColor: "#ffffff",
+                            borderRadius: "8px",
+                            width: "92%",
+                            maxWidth: "1180px",
                             maxHeight: "85vh",
                             display: "flex",
                             flexDirection: "column",
@@ -293,20 +428,21 @@ export default function CargaGeneral() {
                         }}
                         onClick={(e) => e.stopPropagation()}
                     >
-                        {/* Cabecera del modal */}
-                        <div style={{
-                            padding: "16px 20px",
-                            borderBottom: "1px solid #dee2e6",
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center"
-                        }}>
+                        <div
+                            style={{
+                                padding: "16px 20px",
+                                borderBottom: "1px solid #dee2e6",
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center"
+                            }}
+                        >
                             <div>
-                                <h3 style={{ margin: 0, fontSize: "18px", color: "#212529" }}>
+                                <h3 style={{ margin: 0, fontSize: "16px", color: "#212529" }}>
                                     Vista Previa: {archivoActual?.name}
                                 </h3>
                                 <span style={{ fontSize: "12px", color: "#6c757d" }}>
-                                    {tipoDetectado === "SOLICITUDES" ? "Planilla de Solicitudes" : "Planilla de Audiencias Pendientes"} — Mostrando {datosParseados.length} registros
+                                    Tipo: {getNombreTipo(tipoDetectado)} — {datosParseados.length} filas
                                 </span>
                             </div>
                             <button
@@ -316,7 +452,6 @@ export default function CargaGeneral() {
                                     background: "none",
                                     border: "none",
                                     fontSize: "20px",
-                                    fontWeight: "bold",
                                     cursor: "pointer",
                                     color: "#6c757d"
                                 }}
@@ -325,115 +460,63 @@ export default function CargaGeneral() {
                             </button>
                         </div>
 
-                        {/* Cuerpo del modal con tabla scrolleable */}
                         <div style={{ padding: "16px 20px", overflowY: "auto", flex: 1 }}>
-                            {tipoDetectado === "SOLICITUDES" ? (
-                                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
-                                    <thead>
-                                        <tr style={{ backgroundColor: "#f8f9fa", borderBottom: "2px solid #dee2e6" }}>
-                                            <th style={{ padding: "8px", textAlign: "left" }}>Folio</th>
-                                            <th style={{ padding: "8px", textAlign: "left" }}>Ingreso</th>
-                                            <th style={{ padding: "8px", textAlign: "left" }}>Respuesta</th>
-                                            <th style={{ padding: "8px", textAlign: "left" }}>Sujeto Pasivo</th>
-                                            <th style={{ padding: "8px", textAlign: "left" }}>Cargo</th>
-                                            <th style={{ padding: "8px", textAlign: "left" }}>Sujeto Activo</th>
-                                            <th style={{ padding: "8px", textAlign: "left" }}>RUT</th>
-                                            <th style={{ padding: "8px", textAlign: "left" }}>Materia</th>
-                                            <th style={{ padding: "8px", textAlign: "center" }}>Estado</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {datosParseados.map((item, idx) => (
-                                            <tr key={`${item.Folio}-${idx}`} style={{ borderBottom: "1px solid #f1f3f5" }}>
-                                                <td style={{ padding: "8px", fontWeight: 600 }}>{item.Folio}</td>
-                                                <td style={{ padding: "8px" }}>{item.FechaIngreso || "-"}</td>
-                                                <td style={{ padding: "8px" }}>{item.FechaRespuesta || "-"}</td>
-                                                <td style={{ padding: "8px" }}>{item.NombreSujetoPasivo}</td>
-                                                <td style={{ padding: "8px" }}>{item.Cargo}</td>
-                                                <td style={{ padding: "8px" }}>{item.NombreSujetoActivo}</td>
-                                                <td style={{ padding: "8px" }}>{item.RutSujetoActivo}</td>
+                            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
+                                <thead>
+                                    <tr style={{ backgroundColor: "#f8f9fa", borderBottom: "2px solid #dee2e6" }}>
+                                        {columnasVistaPrevia.map((col) => (
+                                            <th key={col} style={{ padding: "8px 10px", textAlign: "left", whiteSpace: "nowrap" }}>
+                                                {col}
+                                            </th>
+                                        ))}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {datosParseados.slice(0, 100).map((row, idx) => (
+                                        <tr key={idx} style={{ borderBottom: "1px solid #f1f3f5" }}>
+                                            {columnasVistaPrevia.map((col) => (
                                                 <td
+                                                    key={`${idx}-${col}`}
                                                     style={{
-                                                        padding: "8px",
-                                                        maxWidth: "200px",
+                                                        padding: "8px 10px",
+                                                        maxWidth: "240px",
                                                         whiteSpace: "nowrap",
                                                         overflow: "hidden",
-                                                        textOverflow: "ellipsis",
-                                                        cursor: "help"
+                                                        textOverflow: "ellipsis"
                                                     }}
-                                                    title={item.Materia || ""}
+                                                    title={String(row[col] ?? "")}
                                                 >
-                                                    {item.Materia || "-"}
+                                                    {String(row[col] ?? "-")}
                                                 </td>
-                                                <td style={{ padding: "8px", textAlign: "center", textTransform: "capitalize" }}>
-                                                    {item.Estado}
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            ) : (
-                                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
-                                    <thead>
-                                        <tr style={{ backgroundColor: "#f8f9fa", borderBottom: "2px solid #dee2e6" }}>
-                                            <th style={{ padding: "8px", textAlign: "left" }}>Folio</th>
-                                            <th style={{ padding: "8px", textAlign: "left" }}>Sujeto Pasivo</th>
-                                            <th style={{ padding: "8px", textAlign: "left" }}>Cargo</th>
-                                            <th style={{ padding: "8px", textAlign: "left" }}>Sujeto Activo</th>
-                                            <th style={{ padding: "8px", textAlign: "left" }}>RUT</th>
-                                            <th style={{ padding: "8px", textAlign: "left" }}>Materia</th>
-                                            <th style={{ padding: "8px", textAlign: "left" }}>Lugar</th>
-                                            <th style={{ padding: "8px", textAlign: "center" }}>Inicio</th>
+                                            ))}
                                         </tr>
-                                    </thead>
-                                    <tbody>
-                                        {datosParseados.map((item, idx) => (
-                                            <tr key={`${item.Folio}-${idx}`} style={{ borderBottom: "1px solid #f1f3f5" }}>
-                                                <td style={{ padding: "8px", fontWeight: 600 }}>{item.Folio}</td>
-                                                <td style={{ padding: "8px" }}>{item.Sujeto_pasivo || item.SujetoPasivo}</td>
-                                                <td style={{ padding: "8px" }}>{item.Cargo}</td>
-                                                <td style={{ padding: "8px" }}>{item.Sujeto_activo || item.SujetoActivo}</td>
-                                                <td style={{ padding: "8px" }}>{item.Rut || item.RutSujetoActivo}</td>
-                                                <td
-                                                    style={{
-                                                        padding: "8px",
-                                                        maxWidth: "220px",
-                                                        whiteSpace: "nowrap",
-                                                        overflow: "hidden",
-                                                        textOverflow: "ellipsis",
-                                                        cursor: "help"
-                                                    }}
-                                                    title={item.Materia || ""}
-                                                >
-                                                    {item.Materia || "-"}
-                                                </td>
-                                                <td style={{ padding: "8px" }}>{item.Lugar}</td>
-                                                <td style={{ padding: "8px", textAlign: "center" }}>
-                                                    {item.Fecha_inicio ? new Date(item.Fecha_inicio).toLocaleDateString() : "-"}
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                                    ))}
+                                </tbody>
+                            </table>
+                            {datosParseados.length > 100 && (
+                                <p style={{ fontSize: "12px", color: "#6c757d", marginTop: "10px", textAlign: "center" }}>
+                                    Mostrando las primeras 100 filas de {datosParseados.length}...
+                                </p>
                             )}
                         </div>
 
-                        {/* Pie del modal */}
-                        <div style={{
-                            padding: "12px 20px",
-                            borderTop: "1px solid #dee2e6",
-                            display: "flex",
-                            justifyContent: "flex-end"
-                        }}>
+                        <div
+                            style={{
+                                padding: "12px 20px",
+                                borderTop: "1px solid #dee2e6",
+                                display: "flex",
+                                justifyContent: "flex-end"
+                            }}
+                        >
                             <button
                                 type="button"
                                 onClick={() => setMostrarModalVistaPrevia(false)}
                                 style={{
                                     padding: "6px 16px",
                                     backgroundColor: "#6c757d",
-                                    color: "#fff",
+                                    color: "#ffffff",
                                     border: "none",
-                                    borderRadius: "6px",
+                                    borderRadius: "2px",
                                     cursor: "pointer",
                                     fontSize: "13px"
                                 }}

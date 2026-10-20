@@ -271,7 +271,7 @@ export default function TablaAlertas({ alertas, cargando, onAccionEnviar }: Prop
                                     padding: "12px",
                                     backgroundColor: "#fff",
                                     border: "1px solid #ced4da",
-                                    borderRadius: "6px",
+                                    borderRadius: "1px",
                                     fontSize: "13px",
                                     lineHeight: 1.5,
                                     color: "#212529",
@@ -293,7 +293,7 @@ export default function TablaAlertas({ alertas, cargando, onAccionEnviar }: Prop
                                     backgroundColor: "#6c757d",
                                     color: "#ffffff",
                                     border: "none",
-                                    borderRadius: "6px",
+                                    borderRadius: "1px",
                                     cursor: "pointer",
                                     fontWeight: 500
                                 }}

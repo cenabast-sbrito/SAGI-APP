@@ -115,7 +115,7 @@ export default function Alertas() {
                             backgroundColor: "#f8f9fa",
                             color: "#495057",
                             border: "1px solid #ced4da",
-                            borderRadius: "6px",
+                            borderRadius: "1px",
                             cursor: cargando ? "not-allowed" : "pointer",
                             fontSize: "14px",
                             fontWeight: 500,
@@ -133,7 +133,7 @@ export default function Alertas() {
                             backgroundColor: cargando ? "#6c757d" : "#0d6efd",
                             color: "#ffffff",
                             border: "none",
-                            borderRadius: "6px",
+                            borderRadius: "1px",
                             cursor: cargando ? "not-allowed" : "pointer",
                             fontSize: "14px",
                             fontWeight: 600,
@@ -151,7 +151,7 @@ export default function Alertas() {
                     padding: "12px 16px",
                     backgroundColor: "#ffebee",
                     color: "#c62828",
-                    borderRadius: "6px",
+                    borderRadius: "1px",
                     border: "1px solid #ffcdd2",
                     fontSize: "14px"
                 }}>
@@ -182,7 +182,7 @@ export default function Alertas() {
                         backgroundColor: pagina <= 1 ? "#e9ecef" : "#0d6efd",
                         color: pagina <= 1 ? "#adb5bd" : "#ffffff",
                         border: "none",
-                        borderRadius: "6px",
+                        borderRadius: "1px",
                         cursor: pagina <= 1 ? "not-allowed" : "pointer",
                         fontWeight: 500
                     }}
@@ -202,7 +202,7 @@ export default function Alertas() {
                         backgroundColor: pagina >= totalPaginas ? "#e9ecef" : "#0d6efd",
                         color: pagina >= totalPaginas ? "#adb5bd" : "#ffffff",
                         border: "none",
-                        borderRadius: "6px",
+                        borderRadius: "1px",
                         cursor: pagina >= totalPaginas ? "not-allowed" : "pointer",
                         fontWeight: 500
                     }}

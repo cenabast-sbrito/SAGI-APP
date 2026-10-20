@@ -33,6 +33,14 @@ export interface AudienciaPendienteItem {
     Fecha_termino: string;
 }
 
+export interface ViajeLobbyItem {
+    [key: string]: any;
+}
+
+export interface ViajeGYDPItem {
+    [key: string]: any;
+}
+
 export interface ResultadoCarga {
     mensaje?: string;
     totalRegistros?: number;

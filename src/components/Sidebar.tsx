@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect } from "react";
 
-export type Tab = "dashboard" | "carga-general" | "alertas" | "funcionarios";
+export type Tab = "dashboard" | "carga-general" | "alertas" | "alertas-viajes" | "funcionarios";
 
 interface Props {
     tabActual: Tab;
@@ -66,6 +66,15 @@ export default function Sidebar({ tabActual, onSelectTab, onCerrarSesion }: Prop
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
                     <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                </svg>
+            )
+        },
+        {
+            id: "alertas-viajes" as Tab,
+            titulo: "Alertas de Viajes",
+            icono: (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.3c.4-.2.6-.6.5-1.1z" />
                 </svg>
             )
         },
@@ -274,7 +283,7 @@ export default function Sidebar({ tabActual, onSelectTab, onCerrarSesion }: Prop
                                                 backgroundColor: "#111827",
                                                 color: "#ffffff",
                                                 padding: "6px 12px",
-                                                borderRadius: "6px",
+                                                borderRadius: "1px",
                                                 fontSize: "12px",
                                                 fontWeight: 500,
                                                 whiteSpace: "nowrap",

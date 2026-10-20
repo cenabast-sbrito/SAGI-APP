@@ -2,7 +2,6 @@
 import { cargarAudienciasPendientesApi } from "../api/cargas.api";
 import { parsearExcelPendientes } from "../utils/excelParser";
 import type { AudienciaPendienteItem, ResultadoCarga } from "../models/carga";
-/////import * as XLSX from 'xlsx';
 
 const DATOS_SIMULADOS_PENDIENTES: AudienciaPendienteItem[] = [
     {
@@ -63,7 +62,6 @@ export default function CargaPendientesPublicacion() {
                 const items = Array.isArray(parsed) ? parsed : parsed.detalles;
                 setDatos(Array.isArray(items) ? items : []);
             } else {
-                // Compatible con .xlsx, .xls, .csv, .txt
                 const registros = await parsearExcelPendientes(file);
                 if (registros.length === 0) {
                     setError("La planilla no contiene registros válidos.");
@@ -113,7 +111,7 @@ export default function CargaPendientesPublicacion() {
                 mensajeDetalle = "Permisos insuficientes: Su usuario no tiene rol para ejecutar cargas masivas.";
             }
 
-            console.error("❌ Error en POST /cargas/audiencias/pendientes-publicacion:", err.response?.data || err);
+            console.error("❌ Error en POST /cargas/audiencias:", err.response?.data || err);
             setError(typeof mensajeDetalle === "string" ? mensajeDetalle : JSON.stringify(mensajeDetalle));
         } finally {
             setCargando(false);
@@ -149,9 +147,9 @@ export default function CargaPendientesPublicacion() {
                             value={usuarioCarga}
                             onChange={(e) => setUsuarioCarga(e.target.value)}
                             style={{
-                                height: "36px",
+                                height: "30px",
                                 padding: "6px 12px",
-                                borderRadius: "6px",
+                                borderRadius: "1px",
                                 border: "1px solid #ced4da",
                                 fontSize: "14px",
                                 width: "180px"
@@ -175,12 +173,12 @@ export default function CargaPendientesPublicacion() {
                         onClick={handleCargarSimulacion}
                         type="button"
                         style={{
-                            height: "36px",
+                            height: "30px",
                             padding: "0 16px",
                             backgroundColor: "#f8f9fa",
                             color: "#495057",
                             border: "1px solid #ced4da",
-                            borderRadius: "6px",
+                            borderRadius: "1px",
                             cursor: "pointer",
                             fontWeight: 500
                         }}
@@ -193,12 +191,12 @@ export default function CargaPendientesPublicacion() {
                         disabled={cargando || datos.length === 0}
                         type="button"
                         style={{
-                            height: "36px",
+                            height: "30px",
                             padding: "0 20px",
                             backgroundColor: cargando || datos.length === 0 ? "#6c757d" : "#f57c00",
                             color: "#fff",
                             border: "none",
-                            borderRadius: "6px",
+                            borderRadius: "1px",
                             cursor: cargando || datos.length === 0 ? "not-allowed" : "pointer",
                             fontWeight: 600
                         }}
@@ -215,27 +213,31 @@ export default function CargaPendientesPublicacion() {
             </div>
 
             {error && (
-                <div style={{
-                    padding: "12px 16px",
-                    backgroundColor: "#ffebee",
-                    color: "#c62828",
-                    borderRadius: "6px",
-                    border: "1px solid #ffcdd2",
-                    marginBottom: "20px"
-                }}>
+                <div
+                    style={{
+                        padding: "12px 16px",
+                        backgroundColor: "#ffebee",
+                        color: "#c62828",
+                        borderRadius: "1px",
+                        border: "1px solid #ffcdd2",
+                        marginBottom: "20px"
+                    }}
+                >
                     {error}
                 </div>
             )}
 
             {resultado && (
-                <div style={{
-                    padding: "16px 20px",
-                    backgroundColor: "#e8f5e9",
-                    color: "#2e7d32",
-                    borderRadius: "8px",
-                    border: "1px solid #c8e6c9",
-                    marginBottom: "24px"
-                }}>
+                <div
+                    style={{
+                        padding: "16px 20px",
+                        backgroundColor: "#e8f5e9",
+                        color: "#2e7d32",
+                        borderRadius: "8px",
+                        border: "1px solid #c8e6c9",
+                        marginBottom: "24px"
+                    }}
+                >
                     <h4 style={{ margin: "0 0 8px 0" }}>Resultado de la Carga</h4>
                     <p style={{ margin: "0 0 4px 0", fontSize: "14px" }}>
                         {resultado.mensaje || "Audiencias pendientes de publicación guardadas exitosamente."}

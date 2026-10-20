@@ -21,7 +21,6 @@ export async function obtenerFuncionariosApi(): Promise<Funcionario[]> {
             ? response.data
             : response.data?.data || response.data?.funcionarios || [];
 
-        // Normalizar propiedades PascalCase y camelCase del backend
         return lista.map((item: any) => ({
             idSujetoPasivo: item.IdSujetoPasivo || item.idSujetoPasivo || "",
             nombreSujetoPasivo: String(item.NombreSujetoPasivo || item.nombreSujetoPasivo || "").trim(),
