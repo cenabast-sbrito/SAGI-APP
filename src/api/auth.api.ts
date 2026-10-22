@@ -1,4 +1,4 @@
-import api from "./axios";
+﻿import api from "./axios";
 
 export interface LoginCredentials {
     usuario: string;
@@ -12,7 +12,7 @@ export interface AuthResponse {
 }
 
 export async function loginLdap(credenciales: LoginCredentials): Promise<AuthResponse> {
-    // Mapeo de usuario/clave a user/pass seg�n Swagger
+    // Mapeo de usuario/clave a user/pass según Swagger
     const response = await api.post<AuthResponse>("/ldap/login", {
         "user": credenciales.usuario,
         "pass": credenciales.clave

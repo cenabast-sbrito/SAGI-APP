@@ -48,12 +48,10 @@ export async function obtenerAlertas(filtros?: Partial<FiltroAlerta>): Promise<A
         }
     }
 
-    ////console.log("➡️ [obtenerAlertas] Parámetros enviados a GET /alertas:", params);
-
     const response = await api.get<Alerta[]>("/alertas", { params });
     let datos = Array.isArray(response.data) ? response.data : [];
 
-    // Fallback de filtrado en cliente: si el backend no aplicó los filtros del SP
+    // Fallback de filtrado en cliente
     if (filtros) {
         if (filtros.folio?.trim()) {
             const f = filtros.folio.trim().toLowerCase();
@@ -61,7 +59,7 @@ export async function obtenerAlertas(filtros?: Partial<FiltroAlerta>): Promise<A
         }
         if (filtros.nombreSujetoPasivo?.trim()) {
             const n = filtros.nombreSujetoPasivo.trim().toLowerCase();
-            datos = datos.filter(item => item.NombreSujetoPasivo?.toLowerCase().includes(n));
+            datos = datos.filter(item => String(item.NombreSujetoPasivo ?? "").toLowerCase().includes(n));
         }
         if (filtros.cargo?.trim()) {
             const c = filtros.cargo.trim().toLowerCase();
@@ -100,7 +98,6 @@ export async function obtenerAlertas(filtros?: Partial<FiltroAlerta>): Promise<A
         }
     }
 
-    ////console.log("⬅️ [obtenerAlertas] Resultados listos para mostrar:", datos);
     return datos;
 }
 

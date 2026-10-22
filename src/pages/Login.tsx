@@ -1,4 +1,4 @@
-﻿import { useState, FormEvent } from "react";
+﻿import { useState, type FormEvent } from "react";
 import { loginLdap } from "../api/auth.api";
 
 interface LoginProps {
@@ -23,7 +23,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
         } catch (err: any) {
             const mensaje =
                 err.response?.data?.message ||
-                "Credenciales LDAP no v\u00e1lidas o error de conexi\u00f3n.";
+                "Credenciales LDAP no válidas o error de conexión.";
             setError(mensaje);
         } finally {
             setCargando(false);
@@ -50,9 +50,9 @@ export default function Login({ onLoginSuccess }: LoginProps) {
                     boxShadow: "0 4px 6px rgba(0,0,0,0.1)"
                 }}
             >
-                <h2 style={{ textAlign: "center", margin: 0 }}>Inicio de Sesi{"\u00f3"}n</h2>
+                <h2 style={{ textAlign: "center", margin: 0 }}>Inicio de Sesión</h2>
                 <span style={{ textAlign: "center", fontSize: "14px", color: "#666" }}>
-                    Validaci{"\u00f3"}n Directorio Activo / LDAP
+                    Validación Directorio Activo / LDAP
                 </span>
 
                 {error && (
@@ -85,7 +85,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
 
                 <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                     <label htmlFor="clave" style={{ fontSize: "14px", fontWeight: "bold" }}>
-                        Contrase{"\u00f1"}a
+                        Contraseña
                     </label>
                     <input
                         id="clave"
@@ -120,11 +120,11 @@ export default function Login({ onLoginSuccess }: LoginProps) {
 }
 
 export const apiConfig = {
-    baseURL: "http://localhost:5630/api",
+    baseURL: "https://apiweb-dev.cenabast.cl/sagi-api/api/sagi/v1",
     servers: [
         {
-            url: "/api/sagi/v1",
-            description: "Servidor API actual (v1)"
+            url: "https://apiweb-dev.cenabast.cl/sagi-api/api/sagi/v1",
+            description: "Servidor API SAGI Dev"
         }
     ]
 };

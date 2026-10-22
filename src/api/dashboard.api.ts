@@ -1,8 +1,8 @@
-import api from "./axios";
+﻿import api from "./axios";
 import type { DashboardData, DashboardFiltros } from "../models/dashboard";
 
 /**
- * Obtiene las m�tricas consolidadas del Dashboard de Alertas SAGI
+ * Obtiene las métricas consolidadas del Dashboard de Alertas SAGI
  * @param filtros Opciones de filtrado por rango o fechas personalizadas
  */
 export async function obtenerDashboard(filtros?: DashboardFiltros): Promise<DashboardData> {

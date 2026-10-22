@@ -4,8 +4,8 @@ export interface Alerta {
     FechaRespuesta: string | null;
     FechaAgendada: string | null;
     Estado: string;
-    NombreSujetoPasivo: string | number;
     NombreSujetoPasivo: string;
+    Cargo?: string;
     Correo: string | null;
     TipoAlerta: string;
     PendientePublicacion: boolean;

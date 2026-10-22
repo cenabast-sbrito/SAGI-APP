@@ -1,7 +1,8 @@
-import * as XLSX from "xlsx";
+ï»¿import * as XLSX from "xlsx";
 import type { SolicitudCargaItem, AudienciaPendienteItem } from "../models/carga";
+import type { Alerta } from "../models/alerta";
 
-// Convierte fechas variadas (DD-MM-YYYY, números seriales de Excel, etc.) a ISO YYYY-MM-DD
+// Convierte fechas variadas (DD-MM-YYYY, nÃºmeros seriales de Excel, etc.) a ISO YYYY-MM-DD
 function formatearFecha(val: any): string | null {
     if (val === null || val === undefined || val === "") return null;
 
@@ -45,7 +46,7 @@ function formatearFechaHora(val: any): string {
 }
 
 /**
- * Normaliza una cadena eliminando acentos, caracteres especiales y espacios múltiples
+ * Normaliza una cadena eliminando acentos, caracteres especiales y espacios mÃºltiples
  */
 function normalizarTexto(val: string): string {
     return val
@@ -72,7 +73,7 @@ async function leerFilasDeArchivo(archivo: File): Promise<string[][]> {
 }
 
 /**
- * Extrae filas dinámicamente comprobando que la fila de cabecera cumpla con columnas mínimas requeridas.
+ * Extrae filas dinÃ¡micamente comprobando que la fila de cabecera cumpla con columnas mÃ­nimas requeridas.
  */
 export async function extraerFilasPorCabecera(
     archivo: File,
@@ -81,7 +82,7 @@ export async function extraerFilasPorCabecera(
     const filas = await leerFilasDeArchivo(archivo);
     const requeridasNorm = columnasRequeridas.map(normalizarTexto);
 
-    // Encontrar el índice de la fila cabecera que contenga todas las columnas requeridas
+    // Encontrar el Ã­ndice de la fila cabecera que contenga todas las columnas requeridas
     const indiceCabecera = filas.findIndex((fila) => {
         const filaNorm = fila.map(normalizarTexto);
         return requeridasNorm.every((req) => filaNorm.some((col) => col.includes(req)));
@@ -126,7 +127,7 @@ export async function parsearExcelSolicitudes(archivo: File): Promise<SolicitudC
     });
 
     if (indiceCabecera === -1) {
-        throw new Error("No se encontró la fila de cabecera con 'Folio' y 'Sujeto Pasivo'.");
+        throw new Error("No se encontrÃ³ la fila de cabecera con 'Folio' y 'Sujeto Pasivo'.");
     }
 
     const cabecera = filas[indiceCabecera].map(c => c.toLowerCase());
@@ -143,7 +144,7 @@ export async function parsearExcelSolicitudes(archivo: File): Promise<SolicitudC
     const colRut = getIdx("rut");
     const colRepresentado = getIdx("representado");
     const colMateria = getIdx("materia");
-    const colEspecMateria = getIdx("especificación materia") !== -1 ? getIdx("especificación materia") : getIdx("especificacion materia");
+    const colEspecMateria = getIdx("especificaciÃ³n materia") !== -1 ? getIdx("especificaciÃ³n materia") : getIdx("especificacion materia");
     const colEstado = getIdx("estado");
 
     const registros: SolicitudCargaItem[] = [];
@@ -177,7 +178,7 @@ export async function parsearExcelSolicitudes(archivo: File): Promise<SolicitudC
 }
 
 /**
- * Procesa la planilla de Audiencias Pendientes de Publicación (SAGI_$TEMPaudiencias_pendientes_publicacion)
+ * Procesa la planilla de Audiencias Pendientes de PublicaciÃ³n (SAGI_$TEMPaudiencias_pendientes_publicacion)
  */
 export async function parsearExcelPendientes(archivo: File): Promise<AudienciaPendienteItem[]> {
     const filas = await leerFilasDeArchivo(archivo);
@@ -188,7 +189,7 @@ export async function parsearExcelPendientes(archivo: File): Promise<AudienciaPe
     });
 
     if (indiceCabecera === -1) {
-        throw new Error("No se encontró la cabecera con las columnas requeridas (Folio, Sujeto Pasivo, etc.).");
+        throw new Error("No se encontrÃ³ la cabecera con las columnas requeridas (Folio, Sujeto Pasivo, etc.).");
     }
 
     const cabecera = filas[indiceCabecera].map(c => c.toLowerCase());
@@ -198,16 +199,16 @@ export async function parsearExcelPendientes(archivo: File): Promise<AudienciaPe
     const colEstado = getIdx("estado");
     const colForma = getIdx("forma");
     const colMateria = getIdx("materia");
-    const colEspecMateria = getIdx("especificación") !== -1 ? getIdx("especificación") : getIdx("especificacion");
+    const colEspecMateria = getIdx("especificaciÃ³n") !== -1 ? getIdx("especificaciÃ³n") : getIdx("especificacion");
     const colLugar = getIdx("lugar");
     const colComuna = getIdx("comuna");
     const colSujetoPasivo = getIdx("sujeto_pasivo") !== -1 ? getIdx("sujeto_pasivo") : getIdx("sujeto pasivo");
     const colCargo = getIdx("cargo");
     const colSujetoActivo = getIdx("sujeto_activo") !== -1 ? getIdx("sujeto_activo") : getIdx("sujeto activo");
     const colRut = getIdx("rut");
-    const colGenero = getIdx("género") !== -1 ? getIdx("género") : (getIdx("genero") !== -1 ? getIdx("genero") : -1);
+    const colGenero = getIdx("gÃ©nero") !== -1 ? getIdx("gÃ©nero") : (getIdx("genero") !== -1 ? getIdx("genero") : -1);
     const colFechaInicio = getIdx("fecha_inicio") !== -1 ? getIdx("fecha_inicio") : getIdx("fecha inicio");
-    const colFechaTermino = getIdx("fecha_término") !== -1 ? getIdx("fecha_término") : (getIdx("fecha termino") !== -1 ? getIdx("fecha termino") : -1);
+    const colFechaTermino = getIdx("fecha_tÃ©rmino") !== -1 ? getIdx("fecha_tÃ©rmino") : (getIdx("fecha termino") !== -1 ? getIdx("fecha termino") : -1);
 
     const registros: AudienciaPendienteItem[] = [];
 
@@ -231,6 +232,68 @@ export async function parsearExcelPendientes(archivo: File): Promise<AudienciaPe
             Genero: colGenero !== -1 ? f[colGenero] : "No especificado",
             Fecha_inicio: formatearFechaHora(colFechaInicio !== -1 ? f[colFechaInicio] : null),
             Fecha_termino: formatearFechaHora(colFechaTermino !== -1 ? f[colFechaTermino] : null)
+        });
+    }
+
+    return registros;
+}
+
+/**
+ * Procesa la planilla de Alertas (SAGI_TMP_Alertas)
+ */
+export async function parsearExcelAlertas(archivo: File): Promise<Alerta[]> {
+    const filas = await leerFilasDeArchivo(archivo);
+
+    const indiceCabecera = filas.findIndex(fila => {
+        const filaStr = fila.map(c => c.toLowerCase()).join(" ");
+        return filaStr.includes("folio") && filaStr.includes("sujeto pasivo");
+    });
+
+    if (indiceCabecera === -1) {
+        throw new Error("No se encontrÃ³ la fila de cabecera con 'Folio' y 'Sujeto Pasivo'.");
+    }
+
+    const cabecera = filas[indiceCabecera].map(c => c.toLowerCase());
+    const getIdx = (nombre: string) => cabecera.findIndex(c => c.includes(nombre.toLowerCase()));
+
+    const colFolio = getIdx("folio");
+    const colFechaIngreso = getIdx("fecha ingreso");
+    const colFechaAgendada = getIdx("fecha agendada");
+    const colEstado = getIdx("estado");
+    const colSujetoPasivo = getIdx("sujeto pasivo");
+    const colCargo = getIdx("cargo");
+    const colCorreo = getIdx("correo");
+    const colTipoAlerta = getIdx("tipo alerta");
+    const colPendientePublicacion = getIdx("pendiente publicacion");
+    const colDiasEnEsperaHabiles = getIdx("dias en espera habiles");
+    const colDiasEnEspera = getIdx("dias en espera");
+    const colEstadoPlazoRespuesta = getIdx("estado plazo respuesta");
+    const colNivelAlerta = getIdx("nivel alerta");
+    const colContenidoEmail = getIdx("contenido email");
+
+    const registros: Alerta[] = [];
+
+    for (let i = indiceCabecera + 1; i < filas.length; i++) {
+        const f = filas[i];
+        const folio = colFolio !== -1 ? f[colFolio] : "";
+        if (!folio) continue;
+
+        registros.push({
+            Folio: folio,
+            FechaIngreso: formatearFecha(colFechaIngreso !== -1 ? f[colFechaIngreso] : null),
+            FechaRespuesta: null,
+            FechaAgendada: formatearFecha(colFechaAgendada !== -1 ? f[colFechaAgendada] : null),
+            Estado: colEstado !== -1 && f[colEstado] ? f[colEstado] : "ingresada",
+            NombreSujetoPasivo: colSujetoPasivo !== -1 ? f[colSujetoPasivo] : "",
+            Cargo: colCargo !== -1 ? f[colCargo] : "",
+            Correo: colCorreo !== -1 ? f[colCorreo] : null,
+            TipoAlerta: colTipoAlerta !== -1 ? f[colTipoAlerta] : "",
+            PendientePublicacion: colPendientePublicacion !== -1 ? f[colPendientePublicacion] === "SI" : false,
+            DiasEnEsperaHabiles: colDiasEnEsperaHabiles !== -1 ? Number(f[colDiasEnEsperaHabiles]) : 0,
+            DiasEnEspera: colDiasEnEspera !== -1 ? Number(f[colDiasEnEspera]) : 0,
+            EstadoPlazoRespuesta: colEstadoPlazoRespuesta !== -1 ? f[colEstadoPlazoRespuesta] : "",
+            NivelAlerta: colNivelAlerta !== -1 ? Number(f[colNivelAlerta]) : 0,
+            ContenidoEmail: colContenidoEmail !== -1 ? f[colContenidoEmail] : ""
         });
     }
 

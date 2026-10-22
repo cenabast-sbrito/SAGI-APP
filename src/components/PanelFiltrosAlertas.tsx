@@ -1,5 +1,4 @@
-﻿import { ChangeEvent } from "react";
-
+﻿import type { ChangeEvent } from "react";
 export type RangoTipo = "TODO" | "SEMANA" | "MES" | "PERSONALIZADO";
 
 const coloresAlerta = [
@@ -12,7 +11,6 @@ const coloresAlerta = [
     { valor: "Violeta", texto: "Violeta (7 días)", color: "#6f42c1" },
     { valor: "Rojo Oscuro", texto: "Rojo Oscuro (≥8 días)", color: "#842029" }
 ];
-
 
 export interface FiltroAlerta {
     estado: string;
@@ -65,7 +63,6 @@ export default function PanelFiltrosAlertas({
     filtros,
     onChange
 }: Props) {
-
     const manejarCambio =
         (campo: keyof FiltroAlerta) =>
             (
@@ -82,7 +79,6 @@ export default function PanelFiltrosAlertas({
 
     return (
         <div style={{ display: "flex", flexDirection: "column", gap: "12px", width: "100%" }}>
-            {/* Fila 1: Folio, Nombre Sujeto Pasivo (VARCHAR), Cargo, Estado */}
             <div
                 style={{
                     display: "flex",
@@ -144,7 +140,6 @@ export default function PanelFiltrosAlertas({
                 </div>
             </div>
 
-            {/* Fila 2: Color Alerta, Tipo Alerta, Rango, Fechas */}
             <div
                 style={{
                     display: "flex",
@@ -155,42 +150,6 @@ export default function PanelFiltrosAlertas({
                     flexWrap: "wrap"
                 }}
             >
-                {/*<div style={contenedorCampoStyle}>*/}
-                {/*    <label style={labelStyle}>Color Alerta</label>*/}
-                {/*    <select*/}
-                {/*        value={filtros.color}*/}
-                {/*        onChange={manejarCambio("color")}*/}
-                {/*        style={inputStyle}*/}
-                {/*    >*/}
-                {/*        <option value="">Todos</option>*/}
-                {/*        <option value="Verde">Verde (1 día)</option>*/}
-                {/*        <option value="Amarillo">Amarillo (2 días)</option>*/}
-                {/*        <option value="Rojo">Rojo (3 días)</option>*/}
-                {/*        <option value="Azul">Azul (≥4 días)</option>*/}
-                {/*        <option value="Naranjo">Naranjo (5-6 días)</option>*/}
-                {/*        <option value="Violeta">Violeta (7 días)</option>*/}
-                {/*        <option value="Rojo Oscuro">Rojo Oscuro (≥8 días)</option>*/}
-                {/*    </select>*/}
-                {/*</div>*/}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
                 <div style={contenedorCampoStyle}>
                     <label style={labelStyle}>Color Alerta</label>
 
@@ -223,11 +182,6 @@ export default function PanelFiltrosAlertas({
                         </select>
                     </div>
                 </div>
-
-
-
-
-
 
                 <div style={contenedorCampoStyle}>
                     <label style={labelStyle}>Tipo Alerta</label>

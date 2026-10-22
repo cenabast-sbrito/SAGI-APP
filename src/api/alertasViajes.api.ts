@@ -9,7 +9,6 @@ function formatearRut(rut: any): string {
 }
 
 function normalizarItemViaje(item: any, index: number): AlertaViaje {
-    // Une TNombres + TPaterno + TMaterno si existen, o toma las variantes
     const partes = [item.TNombres, item.TPaterno, item.TMaterno]
         .filter(Boolean)
         .map((s: string) => String(s).trim());
@@ -18,10 +17,10 @@ function normalizarItemViaje(item: any, index: number): AlertaViaje {
         partes.length > 0
             ? partes.join(" ")
             : item.nombreSujetoPasivo ||
-              item.NombreSujetoPasivo ||
-              item.SujetoPasivo ||
-              item.NombreFuncionario ||
-              "Funcionario sin nombre";
+            item.NombreSujetoPasivo ||
+            item.SujetoPasivo ||
+            item.NombreFuncionario ||
+            "Funcionario sin nombre";
 
     const fechaIni = item.FechaInicio || item.fechaInicio || item.FECHA_INI || null;
     const fechaTer = item.FechaTermino || item.fechaTermino || item.FECHA_TER || null;
@@ -34,19 +33,13 @@ function normalizarItemViaje(item: any, index: number): AlertaViaje {
     return {
         idViaje: item.idViaje || item.IdViaje || index,
         rut: rutStr,
-        Rut: item.Rut ?? item.rut,
-        TNombres: item.TNombres,
-        TPaterno: item.TPaterno,
-        TMaterno: item.TMaterno,
         nombreSujetoPasivo: nombreCompleto,
         cargo: item.Cargo || item.cargo || "",
         correo: item.Correo || item.correo || null,
         destino,
         objetoViaje: item.ObjetoViaje || item.objetoViaje || item.Objeto || "",
         fechaInicio: fechaIni,
-        FechaInicio: fechaIni,
         fechaTermino: fechaTer,
-        FechaTermino: fechaTer,
         estadoAlerta: estado,
         colorAlerta: color,
         origen: item.origen || item.Origen || "GYDP",
@@ -98,7 +91,6 @@ export async function obtenerAlertasViajes(
 
     let datos = rawList.map(normalizarItemViaje);
 
-    // Filtros de respaldo en cliente
     if (filtros) {
         if (filtros.nombreSujetoPasivo?.trim()) {
             const nom = filtros.nombreSujetoPasivo.trim().toLowerCase();

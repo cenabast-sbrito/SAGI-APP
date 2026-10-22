@@ -1,7 +1,11 @@
 import axios from "axios";
 
+const baseURL =
+    import.meta.env.VITE_API_URL ||
+    "https://apiweb-dev.cenabast.cl/sagi-api/api/sagi/v1";
+
 const api = axios.create({
-    baseURL: "http://localhost:5630/api/sagi/v1"
+    baseURL
 });
 
 api.interceptors.request.use((config) => {
